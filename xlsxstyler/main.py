@@ -8,7 +8,8 @@ import openpyxl
 import re
 import os
 import validators
-import urllib3
+import urllib
+import io
 
 
 """
