@@ -7,6 +7,9 @@
 import openpyxl
 import re
 import os
+import validators
+import urllib3
+
 
 """
 # https://www.blog.pythonlibrary.org/2021/08/11/styling-excel-cells-with-openpyxl-and-python/
@@ -104,7 +107,7 @@ class ExcelStyles:
 
 class ExcelWriter:
     @staticmethod
-    def write_dataframe(file_path, sheet_name, df, start_row, start_col, sheet_title=None, add_rownames=True):
+    def write_dataframe(file_path, sheet_name, df, start_row, start_col, add_rownames=True):
         
         # Load the workbook
         if os.path.exists(file_path):
@@ -117,8 +120,6 @@ class ExcelWriter:
             workbook.create_sheet(sheet_name)
         ws = ExcelWriter.create_or_get_sheet(workbook, sheet_name)
 
-        if sheet_title:
-            ws.title = sheet_title
 
         # write the column headers to the worksheet
         for col, header in enumerate(df.columns):
@@ -147,9 +148,16 @@ class ExcelWriter:
         (workbook if os.path.exists(file_path) else ExcelWriter.delete_first_empty_sheet(workbook)).save(filename=file_path)
     
     @staticmethod
-    def write_image(file_path, sheet_name, image_path, start_row, start_col, sheet_title=None):
-        # Load the workbook
-        # Load the workbook
+    def write_image(file_path, sheet_name, img, start_row, start_col):
+        # img is either path or url to image
+
+        if validators.url(img):
+            response = urllib.request.urlopen(img)
+            img_file = io.BytesIO(response.read())
+            _img = openpyxl.drawing.image.Image(img_file)
+        else:
+            _img = openpyxl.drawing.image.Image(img)
+        
         if os.path.exists(file_path):
             workbook = openpyxl.load_workbook(filename=file_path)
         else:
@@ -158,12 +166,8 @@ class ExcelWriter:
         # Select the worksheet
         worksheet = ExcelWriter.create_or_get_sheet(workbook, sheet_name)
 
-        if sheet_title:
-            worksheet.title = sheet_title
-        
         # Add the image to the worksheet
-        img = openpyxl.drawing.image.Image(image_path)
-        worksheet.add_image(img, f"{openpyxl.utils.get_column_letter(start_col)}{start_row}")
+        worksheet.add_image(_img, f"{openpyxl.utils.get_column_letter(start_col)}{start_row}")
 
         # Save the changes to the workbook
         (workbook if os.path.exists(file_path) else ExcelWriter.delete_first_empty_sheet(workbook)).save(filename=file_path)
@@ -209,7 +213,7 @@ class ExcelWriter:
             return wb.create_sheet(sheet_name)
 
     @staticmethod
-    def delete_first_empty_sheet( wb):
+    def delete_first_empty_sheet(wb):
         first_sheet = wb._sheets[0]
         if 'Sheet' == first_sheet.title and [] == list(first_sheet.values):
             wb.remove_sheet(wb._sheets[0])
