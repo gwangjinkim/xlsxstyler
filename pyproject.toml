@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "xlsxstyler"
-version = "0.1.0"
+version = "0.1.2"
 description = "Some rudimentary styling of excel tables and placing pictures using openpyxl"
 authors = ["Gwang-Jin Kim <gwang.jin.kim.phd@gmail.com>"]
+license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.8"
